@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка на робота</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Стили для кнопки */
+        .check-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        /* Стили для модального окна */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            text-align: center;
+            width: 500px;
+        }
+
+        /* Стили для ползунков и блоков */
+        .slider-container {
+            margin: 20px 0 0 0;
+            position: relative;
+            height: 200px;
+            /*background: black;*/
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-image: url("https://static.vecteezy.com/ti/vecteur-libre/p1/12484301-paysage-urbain-pixel-paysage-de-jeu-pixel-art-8-bits-vectoriel.jpg");
+        }
+
+        /* Лунка */
+        .hole {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            left: calc(85% - 50px);
+            user-select: none;
+            user-drag: none;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        /* Марионетка */
+        .block {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            user-select: none;
+            user-drag: none;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* Ручка управления */
+        .handle {
+            position: absolute;
+            width: 80px;
+            height: 40px;
+            margin-bottom: 5px;
+            bottom: 0px;
+            left: 0%; /* Стартовая позиция ручки */
+            border-radius: 20px;
+            cursor: pointer;
+            background: #6590FE;
+            z-index: 1;
+            margin-left: 15px;
+            display: flex;
+            justify-content: center;
+            box-shadow: inset -2px -11px 21px -3px rgba(0,0,0,0.23);
+        }
+        .handle img {
+            user-select: none;
+            user-drag: none;
+            pointer-events: none;
+        }
+
+        .line {
+            position: absolute;
+            bottom: 21px;
+            width: calc(100% - 30px);
+            left: 15px;
+            height: 8px;
+            background: rgb(211 211 211);
+            z-index: 0;
+            border-radius: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="check-btn" id="checkRobot">Я не робот</button>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 style="font-size: 30px; line-height: 1; padding: 0; margin: 0;">Сложи пазл для проверки!</h3>
+            <div class="slider-container">
+                <div class="hole">
+                  <img src="layer1.png" style="
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                    "/>
+                </div>
+                <div class="block puppet" id="slider1">
+                  <img src="svg2.png" style="
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                    "/>
+                </div>
+                <div class="handle" id="handle1">
+                    <img src="arrow-right.svg" alt="" style="width: 20px">
+                </div>
+                <div class="line"></div>
+            </div>
+            <p id="message"></p>
+        </div>
+    </div>
+
+    <script>
+        const topPadding = Math.random() * 120;
+
+        const checkBtn = document.getElementById('checkRobot');
+        const modal = document.getElementById('modal');
+        const slider1 = document.getElementById('slider1');
+        const handle1 = document.getElementById('handle1');
+        const message = document.getElementById('message');
+        const hole = document.querySelector('.hole');
+        const block = document.querySelector('.block');
+        
+        hole.style.top = `${topPadding}px`;
+        block.style.top = `${topPadding}px`;
+
+        let isDragging = false;
+        let offset = 0;
+
+        // Открываем модалку
+        checkBtn.addEventListener('click', function() {
+            modal.style.display = 'flex';
+            message.textContent = '';
+        });
+
+        // Начало перетаскивания ручки
+        handle1.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            offset = e.clientX - handle1.offsetLeft;
+        });
+
+        // Перетаскивание ручки и синхронизация марионетки
+        document.addEventListener('mousemove', function(e) {
+          e.preventDefault();
+            if (isDragging) {
+                let newPosition = e.clientX - offset;
+                const containerWidth = document.querySelector('.slider-container').offsetWidth;
+                const handleWidth = handle1.offsetWidth;
+
+                // Ограничение по горизонтальной оси
+                if (newPosition >= 0 && newPosition <= containerWidth - handleWidth) {
+                    handle1.style.left = newPosition + 'px'; // Двигаем ручку
+                    slider1.style.left = newPosition + 'px'; // Синхронно двигаем марионетку
+
+                    // Проверка попадания марионетки в лунку
+                    const holeLeft = hole.offsetLeft;
+                    const blockLeft = slider1.offsetLeft;
+
+                    // Если марионетка попадает в цель
+                    if (Math.abs(blockLeft - holeLeft) < 10) {
+                        message.textContent = 'Вы прошли проверку!';
+                        setTimeout(() => modal.style.display = 'none', 1000);
+                    }
+                }
+            }
+        });
+
+        // Завершение перетаскивания
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+    </script>
+
+</body>
+</html>
